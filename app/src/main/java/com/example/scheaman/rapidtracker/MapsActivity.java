@@ -39,10 +39,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int PERMISSIONS_REQUEST = 1;
 
     private GoogleMap mMap;
+    private FirebaseAuth mAuth;
+    private FirebaseUser firebaseUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mAuth = FirebaseAuth.getInstance();
+        firebaseUser = mAuth.getCurrentUser();
 
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -85,25 +90,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        final String path = "location" + "/" + "123";
+        final String path = "location" + "/";
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                GenericTypeIndicator<HashMap<String,Object>> t = new GenericTypeIndicator<HashMap<String,Object>>() {};
-                HashMap<String,Object> location = dataSnapshot.getValue(t);
-                Log.d("Retrieved", "Value is: " + location);
-
-                // Add a marker and move the camera
-                Double lat = (Double)location.get("latitude");
-                Double lng = (Double)location.get("longitude");
-                LatLng current = new LatLng(lat, lng);
 
                 mMap.clear();
-                mMap.addMarker(new MarkerOptions().position(current).title("ME"));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    GenericTypeIndicator<HashMap<String,Object>> t = new GenericTypeIndicator<HashMap<String,Object>>() {};
+                    HashMap<String,Object> location = snapshot.getValue(t);
+                    Log.d("Retrieved", "Value is: " + location);
+
+                    // Add a marker and move the camera
+                    Double lat = (Double)location.get("latitude");
+                    Double lng = (Double)location.get("longitude");
+                    LatLng current = new LatLng(lat, lng);
+                    String email = firebaseUser.getEmail();
+
+//                mMap.clear();
+                    mMap.addMarker(new MarkerOptions().position(current).title(email));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                }
+//                GenericTypeIndicator<HashMap<String,Object>> t = new GenericTypeIndicator<HashMap<String,Object>>() {};
+//                HashMap<String,Object> location = dataSnapshot.getValue(t);
+//                Log.d("Retrieved", "Value is: " + location);
+//
+//                // Add a marker and move the camera
+//                Double lat = (Double)location.get("latitude");
+//                Double lng = (Double)location.get("longitude");
+//                LatLng current = new LatLng(lat, lng);
+//                String email = (String)firebaseUser.getEmail();
+//
+//                mMap.clear();
+//                mMap.addMarker(new MarkerOptions().position(current).title(email));
+//                mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
             }
 
             @Override
@@ -116,7 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void requestLocationUpdates() {
-        final String path = "location" + "/" + "123";
+        final String path = "location" + "/" + firebaseUser.getUid();
         int permission = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION);
         if (permission == PackageManager.PERMISSION_GRANTED) {
