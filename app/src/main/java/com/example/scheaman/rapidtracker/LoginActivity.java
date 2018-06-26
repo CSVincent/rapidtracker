@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Credentials;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -37,6 +38,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +76,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     //FirebaseAuth
     private FirebaseAuth mAuth;
-//    private FirebaseUser firebaseUser;
+    private FirebaseUser firebaseUser;
     private static final String TAG = "EmailPassword";
 
     @Override
@@ -81,8 +84,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 
         super.onCreate(savedInstanceState);
-//        firebaseUser = mAuth.getCurrentUser();
+
         setContentView(R.layout.activity_login);
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -111,6 +115,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mProgressView = findViewById(R.id.login_progress);
 
         mAuth = FirebaseAuth.getInstance();
+        firebaseUser = mAuth.getCurrentUser();
+        if(firebaseUser!=null){
+//            mAuth.signOut();
+            Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
+            startActivity(intent);
+            finish();
+        }
+//        mAuth.signOut();
 
     }
 
@@ -176,6 +188,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if(task.isSuccessful()){
                             Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
+                            System.out.println("UID : " + user.getUid());
+                            Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
+                            startActivity(intent);
+                            finish();
+//                            final String path = "user" + "/" + user.getUid();
+//                            DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
+//                            String email = user.getEmail();
+//                            if(email!=null){
+//                                ref.setValue(email);
+//                            }
 //                        updateUI(user);
                         }else{
                             Log.w(TAG, "createUserWithEmail:failure",task.getException());
@@ -199,7 +221,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if(task.isSuccessful()){
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-//                            updateUI(user);
+                            Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
+                            startActivity(intent);
+                            finish();
                         }else{
                             Log.w(TAG,"signInWithEmail:failure",task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
@@ -209,6 +233,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     }
                 });
     }
+
+//    @Override
+//    public void onStart(){
+//        super.onStart();
+//        if(firebaseUser != null){
+//            Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
+//            startActivity(intent);
+//            finish();
+//        }
+//    }
 
     private void attemptLogin() {
         if (mAuthTask != null) {
@@ -277,7 +311,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() >= 6;
+        return password.length() > 5;
     }
 
     /**
@@ -415,21 +449,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             return true;
         }
 
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                // Transition to the map activity
-                Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
+//        @Override
+//        protected void onPostExecute(final Boolean success) {
+//            mAuthTask = null;
+//            showProgress(false);
+//
+//            if (success) {
+//                // Transition to the map activity
+//                Intent intent=new Intent(LoginActivity.this, MapsActivity.class);
+//                startActivity(intent);
+//                finish();
+//            } else {
+//                mPasswordView.setError(getString(R.string.error_incorrect_password));
+//                mPasswordView.requestFocus();
+//            }
+//        }
 
         @Override
         protected void onCancelled() {

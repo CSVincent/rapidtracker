@@ -21,6 +21,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,13 +48,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
-        firebaseUser = mAuth.getCurrentUser();
 
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //checking UID;
+        firebaseUser = mAuth.getCurrentUser();
+        System.out.println("in map activity UID : " + firebaseUser.getUid());
 
         // Check GPS is enabled
         LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -108,11 +112,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Double lat = (Double)location.get("latitude");
                     Double lng = (Double)location.get("longitude");
                     LatLng current = new LatLng(lat, lng);
-                    String email = firebaseUser.getEmail();
 
-//                mMap.clear();
-                    mMap.addMarker(new MarkerOptions().position(current).title(email));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                    if(snapshot.getKey().equals(firebaseUser.getUid())){
+                        mMap.addMarker(new MarkerOptions().position(current).title("ME"));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                    }else{
+                        mMap.addMarker(new MarkerOptions().position(current).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).alpha(0.8f).title("Other people"));
+                    }
                 }
 //                GenericTypeIndicator<HashMap<String,Object>> t = new GenericTypeIndicator<HashMap<String,Object>>() {};
 //                HashMap<String,Object> location = dataSnapshot.getValue(t);
@@ -137,8 +143,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
     private void requestLocationUpdates() {
+//        firebaseUser = mAuth.getCurrentUser();
         final String path = "location" + "/" + firebaseUser.getUid();
         int permission = ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION);
